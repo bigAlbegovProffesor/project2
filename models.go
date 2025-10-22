@@ -2,6 +2,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"errors"
 )
 
 type Book struct {
@@ -88,7 +89,7 @@ type Library struct {
 	lastReaderID int
 }
 
-func (lib *Library) AddReader(firstName, lastName string) *Reader {
+func (lib *Library) AddReader(firstName, lastName string) (*Reader, error){
 	cleanedFirstName := strings.ToLower(strings.TrimSpace(firstName))
 	cleanedLastName := strings.ToLower(strings.TrimSpace(lastName))
 	if (cleanedFirstName == "" || cleanedLastName == ""){
@@ -189,11 +190,6 @@ func (lib *Library) ReturnBook(bookID int) error {
 }
 
 // ListAllBooksПоказывает все книги в библиотеке
-func (lib *Library) ListAllBooks() {
-	fmt.Println("---Список всех книг---")
-	for i, book := range lib.Books {
-		fmt.Println(i+1, book)
-	}
-
-	fmt.Println("----------------------")
+func (lib *Library) GetAllBooks() []*Book {
+	return lib.Books
 }
