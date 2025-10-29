@@ -16,6 +16,15 @@ type Library struct {
 	lastReaderID int
 }
 
+func New() *Library{
+	
+	return &Library{
+		Books: make([]*domain.Book,0 ),
+		Readers: make([]*domain.Reader,0 ),
+	}
+
+}
+
 func (lib *Library) AddReader(firstName, lastName string) (*domain.Reader, error){
 	cleanedFirstName := strings.ToLower(strings.TrimSpace(firstName))
 	cleanedLastName := strings.ToLower(strings.TrimSpace(lastName))

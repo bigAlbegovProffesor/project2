@@ -1,4 +1,4 @@
-package main
+package storage
 
 type Storable interface {
 	Save() error
