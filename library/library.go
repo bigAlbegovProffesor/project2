@@ -5,8 +5,11 @@ import(
 	"strings"
 	"fmt"
 	"errors"
+	// "strings"
 )
 
+
+// Library - наша центральная структура-агрегатор
 type Library struct {
 	Books   []*domain.Book
 	Readers []*domain.Reader
@@ -16,21 +19,15 @@ type Library struct {
 	lastReaderID int
 }
 
-func New() *Library{
-	
-	return &Library{
-		Books: make([]*domain.Book,0 ),
-		Readers: make([]*domain.Reader,0 ),
+
+func (lib *Library) AddReader(firstName, lastName string) (*domain.Reader,error) {
+	cleanedFirstName := strings.TrimSpace(firstName)
+	cleanedLastName := strings.TrimSpace(lastName)
+
+	if cleanedFirstName == "" || cleanedLastName == ""{
+		return nil, errors.New("фамилия и имя не могут быть пустыми")
 	}
 
-}
-
-func (lib *Library) AddReader(firstName, lastName string) (*domain.Reader, error){
-	cleanedFirstName := strings.ToLower(strings.TrimSpace(firstName))
-	cleanedLastName := strings.ToLower(strings.TrimSpace(lastName))
-	if (cleanedFirstName == "" || cleanedLastName == ""){
-		return nil, errors.New("Фамилия и имя не могут быть пустыми")
-	}
 	lib.lastReaderID++
 
 	//Создаем нового читателя
@@ -44,11 +41,19 @@ func (lib *Library) AddReader(firstName, lastName string) (*domain.Reader, error
 	//Добавляем читателя в срез
 	lib.Readers = append(lib.Readers, newReader)
 
+	
 	return newReader, nil
 }
 
+
 // AddBook добавляет новую книгу в библиотеку
-func (lib *Library) AddBook(title, author string, year int) *domain.Book {
+func (lib *Library) AddBook(title, author string, year int) (*domain.Book, error) {
+	// Проверка дубля
+    for _, b := range lib.Books {
+        if b.Title == title && b.Author == author {
+            return nil, fmt.Errorf("книга '%s' авторства '%s' уже существует", title, author)
+        }
+    }
 	lib.lastBookID++
 
 	//Создаем новую книгу
@@ -63,9 +68,11 @@ func (lib *Library) AddBook(title, author string, year int) *domain.Book {
 	//Добавляем новую книгу в библиотеку
 	lib.Books = append(lib.Books, newBook)
 
-	fmt.Printf("Добавлена новая книга: %s\n", newBook)
-	return newBook
+
+	return newBook, nil
 }
+
+
 
 // FindBookByID ищет книгу по ее уникальному ID
 func (lib *Library) FindBookByID(id int) (*domain.Book, error) {
@@ -74,8 +81,7 @@ func (lib *Library) FindBookByID(id int) (*domain.Book, error) {
 			return book, nil
 		}
 	}
-
-	return nil, fmt.Errorf("книга с ID %d не найдена в библиотеке", id)
+	return nil, fmt.Errorf("книга с ID %d не найдена", id)
 }
 
 // FindReaderByID ищет читателя по его уникальному ID
@@ -85,47 +91,61 @@ func (lib *Library) FindReaderByID(id int) (*domain.Reader, error) {
 			return reader, nil
 		}
 	}
-
 	return nil, fmt.Errorf("читатель с ID %d не найден", id)
 }
 
-// IssueBookToReader - основной публичный метод для выдачи книги
 func (lib *Library) IssueBookToReader(bookID, readerID int) error {
-	//1. Найти книгу
-	book, err := lib.FindBookByID(bookID)
-	if err != nil {
-		return err
-	}
-
-	//2. Найти читателя
-	reader, err := lib.FindReaderByID(readerID)
-	if err != nil {
-		return err
-	}
-
-	//Вызываем обновленный метод и ПРОВЕРЯЕМ ОШИБКУ
-	err = book.IssueBook(reader)
-	if err != nil {
-		return err
-	}     
-	return nil //Все 3 шага прошли успешно
-}
-
-func (lib *Library) ReturnBook(bookID int) error {
 
 	book, err := lib.FindBookByID(bookID)
-	if err != nil{
-		return err
-	} 
-	err = book.ReturnBook()
-	if err != nil{
-		return err
+	if err != nil {
+		return err 
 	}
-	book.IsIssued = false
+	
+	if book.IsIssued{
+		return fmt.Errorf("книга '%s' уже выдана", book.Title)
+	}
+
+	readerExists := false
+	for _, reader := range lib.Readers{		
+		if reader.ID == readerID{
+			readerExists = true
+			break
+		}
+	}
+	if !readerExists{
+		return fmt.Errorf("читатель с ID %d не найден", readerID)
+	}
+
+	book.IsIssued = true
+	book.ReaderID = &readerID
 	return nil
 }
 
-// ListAllBooksПоказывает все книги в библиотеке
-func (lib *Library) GetAllBooks() []*domain.Book {
+
+func (lib *Library) ReturnBook(bookID int) error{
+	book, err := lib.FindBookByID(bookID)
+	if err!= nil{
+		return err
+	}
+	err = book.ReturnBook()
+	if err!= nil{
+		return err
+	}
+	return book.ReturnBook()
+}
+
+
+func (lib *Library) GetAllBooks() []*domain.Book{
 	return lib.Books
+
+}
+func (lib *Library) GetAllReaders() []*domain.Reader{
+	return lib.Readers
+}
+
+func New() *Library {
+	return &Library{
+		Books:   []*domain.Book{},
+		Readers: []*domain.Reader{},
+	}
 }
