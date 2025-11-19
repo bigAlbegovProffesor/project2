@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
 	"project2/domain"
 )
 
@@ -19,7 +20,7 @@ type Storable interface {
 	Load() error
 }
 
-// Сохраняет срез книг
+// Экспорт списка книг в CSV
 func SaveBooksToCSV(filename string, books []*domain.Book) error {
 	file, err := os.Create(filename)
 	if err != nil {
@@ -65,7 +66,7 @@ func SaveBooksToCSV(filename string, books []*domain.Book) error {
 	return nil
 }
 
-// загружает список книг
+// Импорт списка книг из CSV
 func LoadBooksFromCSV(filename string) ([]*domain.Book, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -86,7 +87,7 @@ func LoadBooksFromCSV(filename string) ([]*domain.Book, error) {
 
 	var books []*domain.Book
 	for _, record := range records[1:] {
-		if len(record) < 4 {
+		if len(record) < 5 {
 			continue
 		}
 
@@ -110,30 +111,31 @@ func LoadBooksFromCSV(filename string) ([]*domain.Book, error) {
 		books = append(books, &book)
 	}
 
-	fmt.Println("Список книг: ")
-	for _, book := range books {
-		fmt.Println(book)
-	}
 	return books, nil
 }
 
-func SaveReaderToCSV(filename string, readers []*domain.Reader) error{
+// Экспорт читателей
+func SaveReadersToCSV(filename string, readers []*domain.Reader) error {
 	file, err := os.Create(filename)
-	if err != nil{
-		return fmt.Errorf("не удалось создать файл: %s", filename)
+	if err != nil {
+		return fmt.Errorf("не удалось создать файл %s: %w", filename, err)
 	}
 	defer file.Close()
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
-	headers := []string{"ID", "Name", "LastName", "Status"}
-	if err := writer.Write(headers); err != nil{
-		return fmt.Errorf("не удалось записать пользователя")
+
+	//Записываем заголовок
+	headers := []string{"ID", "Имя", "Фамилия", "Статус"}
+	if err := writer.Write(headers); err != nil {
+		return fmt.Errorf("не удалось записать заголовок: %w", err)
 	}
-	for _, reader := range readers{
+
+	//Записываем данные книг
+	for _, reader := range readers {
 		var status string = ""
-		if reader.IsActive{
+		if reader.IsActive {
 			status = "1"
-		}else{
+		} else {
 			status = "0"
 		}
 		record := []string{
@@ -142,13 +144,16 @@ func SaveReaderToCSV(filename string, readers []*domain.Reader) error{
 			reader.LastName,
 			status,
 		}
-		if err := writer.Write(record); err != nil{
-			return fmt.Errorf("не удалось записать пользователя %d %s %s", reader.ID, reader.FirstName, reader.LastName)
+		if err := writer.Write(record); err != nil {
+			return fmt.Errorf("не удалось записать список читателей с ID %d: %w", reader.ID, err)
 		}
 	}
 	return nil
 }
-func LoadReaderFromCSV (filename string) ([]*domain.Reader, error){
+
+// Импорт списка читателей из CSV
+
+func LoadReadersFromCSV(filename string) ([]*domain.Reader, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, fmt.Errorf("не удалось открыть файл %s", filename)
@@ -161,33 +166,40 @@ func LoadReaderFromCSV (filename string) ([]*domain.Reader, error){
 	if err != nil {
 		return nil, fmt.Errorf("не удалось прочитать данные из файла: %w", err)
 	}
-	if len(records) < 2{
+
+	if len(records) < 2 {
 		return []*domain.Reader{}, nil
 	}
-	var readers[]*domain.Reader
-	for _, record := range records[1:]{
-		if len(record) < 4{
+
+	var readers []*domain.Reader
+	for _, record := range records[1:] {
+		if len(record) < 4 {
 			continue
 		}
 		id, err := strconv.Atoi(record[0])
-		if err != nil{
+		if err != nil {
 			continue
 		}
+
 		status, err := strconv.ParseBool(record[3])
-		if err != nil{
+		if err != nil {
 			continue
 		}
-		reader := domain.Reader{
-			ID: id,
+
+		read := domain.Reader{
+			ID:        id,
 			FirstName: record[1],
-			LastName: record[2],
-			IsActive: status,
+			LastName:  record[2],
+			IsActive:  status,
 		}
-		readers = append(readers,  &reader)
+
+		readers = append(readers, &read)
 	}
-	fmt.Println("Список читателей:")
-	for _, reader := range readers{
-		fmt.Println(reader)
+
+	fmt.Println("Список читателей: ")
+	for _, read := range readers {
+		fmt.Println(read)
 	}
 	return readers, nil
+
 }
