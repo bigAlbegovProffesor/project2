@@ -10,4 +10,4 @@ func GetPortFromConfig(config map[string]string) (string, error) {
 	} else {
 		return port, errors.New("ключ 'PORT' отсутсвует в конфигурации")
 	}
-}
+}// asdasdsa

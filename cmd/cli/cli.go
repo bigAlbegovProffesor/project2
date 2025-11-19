@@ -7,7 +7,7 @@ import (
 	"project2/storage"
 	"os"
 	"strconv"
-)
+)// asdasdsa
 
 func printMenu() {
 

@@ -9,6 +9,13 @@ import (
 func main() {
     myLibrary := library.New()
 
+// asdasdsa
+    fmt.Println("\n--- Библиотека готова к работе ---")
+    fmt.Println("Количество читателей:", len(myLibrary.Readers))
+    fmt.Println("Количество книг:", len(myLibrary.Books))
+
+    fmt.Println("\n---Тестируем выдачу книг---")
+
     cli.Run(myLibrary)
     
     // err := myLibrary.IssueBookToReader(1, 1)
